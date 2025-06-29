@@ -11,8 +11,8 @@
 *  Published URL: https://assignment3-l1a5p5n31-zeynab786s-projects.vercel.app 
 *
 ********************************************************************************/
-const setData = require("../data/setData");
-const themeData = require("../data/themeData");
+const setData = require("../Data/setData");
+const themeData = require("../Data/themeData");
 
 class LegoData {
   constructor() {
