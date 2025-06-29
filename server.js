@@ -19,30 +19,30 @@ const legoData = new LegoData();
 
 const app = express();
 
+// Route: Home
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "home.html"));
 });
 
+// Route: About
 app.get("/about", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "about.html"));
 });
 
+// Route: All sets or by theme
 app.get("/lego/sets", async (req, res) => {
   try {
     const theme = req.query.theme;
-
-    if (theme) {
-      const sets = await legoData.getSetsByTheme(theme);
-      res.json(sets);
-    } else {
-      const sets = await legoData.getAllSets();
-      res.json(sets);
-    }
+    const sets = theme
+      ? await legoData.getSetsByTheme(theme)
+      : await legoData.getAllSets();
+    res.json(sets);
   } catch (err) {
     res.status(404).json({ error: err });
   }
 });
 
+// Route: Specific set
 app.get("/lego/sets/:set_num", async (req, res) => {
   try {
     const setNum = req.params.set_num;
@@ -53,20 +53,19 @@ app.get("/lego/sets/:set_num", async (req, res) => {
   }
 });
 
+// 404 Handler
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
 });
 
-// ✅ Proper Vercel export: wait for data to initialize before exporting the app
+// Vercel: Export as Serverless Function
+let initialized = false;
+
 module.exports = async (req, res) => {
-  try {
-    if (!legoData.initialized) {
-      await legoData.initialize();
-      legoData.initialized = true; // flag to avoid re-initializing on each request
-    }
-    return app(req, res);
-  } catch (err) {
-    console.error("Initialization failed:", err);
-    res.status(500).send("Server initialization error");
+  if (!initialized) {
+    await legoData.initialize();
+    initialized = true;
   }
+
+  return app(req, res);
 };
