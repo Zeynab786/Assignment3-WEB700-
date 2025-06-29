@@ -18,7 +18,6 @@ const LegoData = require("./modules/legoSets");
 const legoData = new LegoData();
 
 const app = express();
-const HTTP_PORT = process.env.PORT || 8080;
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "home.html"));
@@ -27,39 +26,47 @@ app.get("/", (req, res) => {
 app.get("/about", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "about.html"));
 });
-legoData.initialize()
-  .then(() => {
-    app.listen(HTTP_PORT, () => {
-      console.log(`Server is listening on port ${HTTP_PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("Failed to start server:", err);
-  });
+
 app.get("/lego/sets", async (req, res) => {
   try {
     const theme = req.query.theme;
 
     if (theme) {
       const sets = await legoData.getSetsByTheme(theme);
-      res.json(sets); 
+      res.json(sets);
     } else {
       const sets = await legoData.getAllSets();
-      res.json(sets); 
+      res.json(sets);
     }
   } catch (err) {
     res.status(404).json({ error: err });
   }
 });
+
 app.get("/lego/sets/:set_num", async (req, res) => {
   try {
     const setNum = req.params.set_num;
     const set = await legoData.getSetByNum(setNum);
-    res.json(set); 
+    res.json(set);
   } catch (err) {
     res.status(404).json({ error: err });
   }
 });
+
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
 });
+
+// ✅ Proper Vercel export: wait for data to initialize before exporting the app
+module.exports = async (req, res) => {
+  try {
+    if (!legoData.initialized) {
+      await legoData.initialize();
+      legoData.initialized = true; // flag to avoid re-initializing on each request
+    }
+    return app(req, res);
+  } catch (err) {
+    console.error("Initialization failed:", err);
+    res.status(500).send("Server initialization error");
+  }
+};
