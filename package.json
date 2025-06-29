@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "name": "assignment3",
+  "version": "1.0.0",
+  "description": "/*******************************************************\r  * 🗂️ Folder Map in Story Terms (LEGO Shop Analogy) 🧱\r  *\r  * Real Folder/File         Story Role                  What it Does\r  * -------------------------------------------------------------------------\r  * server.js                🧍 Manager at front desk    Greets visitors, talks to helper, shows pages\r  * modules/legoSets.js      🤖 Smart helper in back      Handles LEGO logic, uses data\r  * data/                    📦 Basement warehouse       Has all LEGO info (Lego set & theme data)\r  * views/                   🖼️ Shop display windows      Static HTML pages visitors see (home, about, 404)\r  * package.json             🧰 Toolbox manual                                                                                                                                                       Describes setup and tools used (dependencies, scripts)\r  *\r  * 🏪 This is your LEGO shop! Every part plays a role to\r  * keep the server clean, modular, and user-friendly.\r  *******************************************************/",
+  "main": "server.js",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

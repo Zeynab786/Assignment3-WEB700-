@@ -1,0 +1,14 @@
+/*******************************************************
+ * 🗂️ Folder Map in Story Terms (LEGO Shop Analogy) 🧱
+ *
+ * Real Folder/File         Story Role                  What it Does
+ * -------------------------------------------------------------------------
+ * server.js                🧍 Manager at front desk    Greets visitors, talks to helper, shows pages
+ * modules/legoSets.js      🤖 Smart helper in back      Handles LEGO logic, uses data
+ * data/                    📦 Basement warehouse       Has all LEGO info (Lego set & theme data)
+ * views/                   🖼️ Shop display windows      Static HTML pages visitors see (home, about, 404)
+ * package.json             🧰 Toolbox manual                                                                                                                                                       Describes setup and tools used (dependencies, scripts)
+ *
+ * 🏪 This is your LEGO shop! Every part plays a role to
+ * keep the server clean, modular, and user-friendly.
+ *******************************************************/
