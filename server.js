@@ -11,7 +11,6 @@
 *  Published URL: https://assignment3-l1a5p5n31-zeynab786s-projects.vercel.app 
 *
 ********************************************************************************/
-
 const express = require("express");
 const path = require("path");
 
@@ -19,49 +18,62 @@ const LegoData = require("./modules/legoSets");
 const legoData = new LegoData();
 
 const app = express();
-const 
 const HTTP_PORT = process.env.PORT || 8080;
 
+// Serve static files from the "public" directory if needed (optional)
+app.use(express.static("public"));
+
+// ROUTES
+
+// Home page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "home.html"));
 });
 
+// About page
 app.get("/about", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "about.html"));
 });
-legoData.initialize()
-  .then(() => {
-    app.listen(HTTP_PORT, () => {
-      console.log(`Server is listening on port ${HTTP_PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("Failed to start server:", err);
-  });
+
+// GET all Lego sets or by theme
 app.get("/lego/sets", async (req, res) => {
   try {
     const theme = req.query.theme;
 
     if (theme) {
       const sets = await legoData.getSetsByTheme(theme);
-      res.json(sets); 
+      res.json(sets);
     } else {
       const sets = await legoData.getAllSets();
-      res.json(sets); 
+      res.json(sets);
     }
   } catch (err) {
-    res.status(404).json({ error: err });
+    res.status(404).send(`Error: ${err}`);
   }
 });
+
+// GET single Lego set by set_num
 app.get("/lego/sets/:set_num", async (req, res) => {
   try {
-    const setNum = req.params.set_num;
-    const set = await legoData.getSetByNum(setNum);
-    res.json(set); 
+    const set = await legoData.getSetByNum(req.params.set_num);
+    res.json(set);
   } catch (err) {
-    res.status(404).json({ error: err });
+    res.status(404).send(`Error: ${err}`);
   }
 });
+
+// Custom 404 route (must come last)
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
 });
+
+// Start server only after data initialization
+legoData.initialize()
+  .then(() => {
+    app.listen(HTTP_PORT, () => {
+      console.log(`Server is running on port ${HTTP_PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error(`Failed to start server: ${err}`);
+  });
