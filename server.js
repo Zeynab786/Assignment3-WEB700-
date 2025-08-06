@@ -11,69 +11,114 @@
 *  Published URL: https://assignment3-l1a5p5n31-zeynab786s-projects.vercel.app 
 *
 ********************************************************************************/
-const express = require("express");
-const path = require("path");
 
-const LegoData = require("./modules/legoSets");
-const legoData = new LegoData();
 
-const app = express();
+const LegoData = require("./modules/legoSets")
+const legoData = new LegoData()
+const express = require('express')
+const app = express()
+const path = require('path');
 const HTTP_PORT = process.env.PORT || 8080;
 
-// Serve static files from the "public" directory if needed (optional)
-app.use(express.static("public"));
+//Middleware
+app.set('view engine', 'ejs');
+app.set('views', __dirname + '/views');
+app.use(express.static(__dirname + '/public'));
+app.use(express.json());
+app.use(express.urlencoded({extended:true}))
 
-// ROUTES
 
-// Home page
+
+//http://localhost:8080/
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "home.html"));
-});
+    res.render("home")
 
-// About page
+})
+
+//http://localhost:8080/about
 app.get("/about", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "about.html"));
-});
+    res.render("about")
+})
 
-// GET all Lego sets or by theme
+//http://localhost:8080/lego/sets
 app.get("/lego/sets", async (req, res) => {
-  try {
-    const theme = req.query.theme;
-
-    if (theme) {
-      const sets = await legoData.getSetsByTheme(theme);
-      res.json(sets);
-    } else {
-      const sets = await legoData.getAllSets();
-      res.json(sets);
+    try {
+        let sets;
+        if (req.query.theme) {
+            sets = await legoData.getSetsByTheme(req.query.theme);
+        } else {
+            sets = await legoData.getAllSets();
+        }
+         res.render("sets", {sets}); // send response to client
+    } catch (err) {
+        res.render("404", {message: err}); 
     }
-  } catch (err) {
-    res.status(404).send(`Error: ${err}`);
-  }
 });
 
-// GET single Lego set by set_num
+//http://localhost:8080/lego/sets/:set_num
 app.get("/lego/sets/:set_num", async (req, res) => {
-  try {
-    const set = await legoData.getSetByNum(req.params.set_num);
-    res.json(set);
-  } catch (err) {
-    res.status(404).send(`Error: ${err}`);
-  }
+    try {
+        let sets;
+        if (req.params.set_num) {
+            sets = await legoData.getSetByNum(req.params.set_num);
+        }
+
+         res.render("set", {set: sets}); // send response to client
+    } catch (err) {
+        res.render("404", {message: err}); 
+    }
 });
 
-// Custom 404 route (must come last)
-app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
+//http://localhost:8080/lego/addSet
+app.get('/lego/addSet', async (req, res) => {
+    try{
+      themes = await legoData.getAllThemes()
+      if (themes) {
+         res.render("addSet", {themes: themes});
+      } 
+    } catch (err) {
+        res.status(404).render("404", {message: err});
+    }
 });
 
-// Start server only after data initialization
-legoData.initialize()
-  .then(() => {
-    app.listen(HTTP_PORT, () => {
-      console.log(`Server is running on port ${HTTP_PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error(`Failed to start server: ${err}`);
-  });
+//http://localhost:8080/lego/addSet
+app.post('/lego/addSet', async (req, res) => {
+    const setData = req.body
+    try {
+        newSet = await legoData.addSet(setData);
+        if (newSet){
+            res.redirect('/lego/sets');
+        } 
+    } catch (err) {
+        res.status(500).render("500", {message: err});
+    }
+});
+
+
+//http://localhost:8080/lego/deleteSet/:set_num
+app.get("/lego/deleteSet/:set_num", async (req,res)=>{
+       try{
+          await legoData.deleteSetByNum(req.params.set_num);
+          res.redirect("/lego/sets");
+       }catch(err){
+          res.status(500).render("500", {message: err});
+       }
+});
+
+
+
+
+//makes an the application listen for requests
+async function listenChecker() {
+    try{
+        await legoData.initialize();
+        app.listen(HTTP_PORT, () => {
+            console.log('Server started....')
+        })
+    } 
+    
+    catch(error){
+    console.log(error.message)
+    }
+}
+listenChecker()
