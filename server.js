@@ -1,5 +1,5 @@
 /********************************************************************************
-*  WEB700 – Assignment 03
+*  WEB700 – Assignment 06
 * 
 *  I declare that this assignment is my own work in accordance with Seneca's
 *  Academic Integrity Policy:
@@ -8,117 +8,96 @@
 * 
 *  Name: Zeinab Mohamed      Student ID: 123970246      Date: 14th June 2025
 *
-*  Published URL: https://assignment3-l1a5p5n31-zeynab786s-projects.vercel.app 
+*  Published URL: https://assignment6-l1a5p5n31-zeynab786s-projects.vercel.app 
 *
 ********************************************************************************/
 
-
-const LegoData = require("./modules/legoSets")
-const legoData = new LegoData()
-const express = require('express')
-const app = express()
+const LegoData = require("./modules/legoSets");
+const legoData = new LegoData();
+const express = require('express');
+const app = express();
 const path = require('path');
 const HTTP_PORT = process.env.PORT || 8080;
 
-//Middleware
+// Middleware
 app.set('view engine', 'ejs');
-app.set('views', __dirname + '/views');
-app.use(express.static(__dirname + '/public'));
+app.set('views', path.join(__dirname, '/views'));
+app.use(express.static(path.join(__dirname, '/public')));
 app.use(express.json());
-app.use(express.urlencoded({extended:true}))
+app.use(express.urlencoded({ extended: true }));
 
-
-
-//http://localhost:8080/
+// Home
 app.get("/", (req, res) => {
-    res.render("home")
+    res.render("home");
+});
 
-})
-
-//http://localhost:8080/about
+// About
 app.get("/about", (req, res) => {
-    res.render("about")
-})
+    res.render("about");
+});
 
-//http://localhost:8080/lego/sets
+// List all Lego Sets or filter by theme
 app.get("/lego/sets", async (req, res) => {
     try {
-        let sets;
-        if (req.query.theme) {
-            sets = await legoData.getSetsByTheme(req.query.theme);
-        } else {
-            sets = await legoData.getAllSets();
-        }
-         res.render("sets", {sets}); // send response to client
+        const sets = req.query.theme 
+            ? await legoData.getSetsByTheme(req.query.theme)
+            : await legoData.getAllSets();
+        res.render("sets", { sets });
     } catch (err) {
-        res.render("404", {message: err}); 
+        res.status(404).render("404", { message: err });
     }
 });
 
-//http://localhost:8080/lego/sets/:set_num
+// View individual Lego Set
 app.get("/lego/sets/:set_num", async (req, res) => {
     try {
-        let sets;
-        if (req.params.set_num) {
-            sets = await legoData.getSetByNum(req.params.set_num);
-        }
-
-         res.render("set", {set: sets}); // send response to client
+        const set = await legoData.getSetByNum(req.params.set_num);
+        res.render("set", { set });
     } catch (err) {
-        res.render("404", {message: err}); 
+        res.status(404).render("404", { message: err });
     }
 });
 
-//http://localhost:8080/lego/addSet
+// Show Add Set Form
 app.get('/lego/addSet', async (req, res) => {
-    try{
-      themes = await legoData.getAllThemes()
-      if (themes) {
-         res.render("addSet", {themes: themes});
-      } 
-    } catch (err) {
-        res.status(404).render("404", {message: err});
-    }
-});
-
-//http://localhost:8080/lego/addSet
-app.post('/lego/addSet', async (req, res) => {
-    const setData = req.body
     try {
-        newSet = await legoData.addSet(setData);
-        if (newSet){
-            res.redirect('/lego/sets');
-        } 
+        const themes = await legoData.getAllThemes();
+        res.render("addSet", { themes });
     } catch (err) {
-        res.status(500).render("500", {message: err});
+        res.status(404).render("404", { message: err });
     }
 });
 
-
-//http://localhost:8080/lego/deleteSet/:set_num
-app.get("/lego/deleteSet/:set_num", async (req,res)=>{
-       try{
-          await legoData.deleteSetByNum(req.params.set_num);
-          res.redirect("/lego/sets");
-       }catch(err){
-          res.status(500).render("500", {message: err});
-       }
+// Handle Add Set Form Submission
+app.post('/lego/addSet', async (req, res) => {
+    try {
+        await legoData.addSet(req.body);
+        res.redirect('/lego/sets');
+    } catch (err) {
+        res.status(500).render("500", { message: err });
+    }
 });
 
+// Delete a Lego Set
+app.get("/lego/deleteSet/:set_num", async (req, res) => {
+    try {
+        await legoData.deleteSetByNum(req.params.set_num);
+        res.redirect("/lego/sets");
+    } catch (err) {
+        res.status(500).render("500", { message: err });
+    }
+});
 
-
-
-//makes an the application listen for requests
-async function listenChecker() {
-    try{
+// Start server after DB connection
+async function startServer() {
+    try {
         await legoData.initialize();
         app.listen(HTTP_PORT, () => {
-            console.log('Server started....')
-        })
-    } 
-    
-    catch(error){
-    console.log(error.message)
+            console.log(`Server listening on port ${HTTP_PORT}`);
+        });
+    } catch (err) {
+        console.error("Failed to start server:", err.message);
     }
 }
-listenChecker()
+
+startServer();
